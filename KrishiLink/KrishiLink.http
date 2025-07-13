@@ -1,0 +1,6 @@
+@KrishiLink_HostAddress = http://localhost:5183
+
+GET {{KrishiLink_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
