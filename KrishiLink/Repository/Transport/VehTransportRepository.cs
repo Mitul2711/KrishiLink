@@ -94,7 +94,7 @@ namespace KrishiLink.Repository.Transport
             {
                 new SqlParameter("@Action", "POST"),
                 new SqlParameter("@VehicalId", DBNull.Value),
-                new SqlParameter("@Number_Plate", vehicleTransportData.Number_Plate ?? (object)DBNull.Value),
+                new SqlParameter("@Vehical_Number", vehicleTransportData.Vehical_Number ?? (object)DBNull.Value),
                 new SqlParameter("@Total_Weight", vehicleTransportData.Total_Weight),
                 new SqlParameter("@Total_Amount", vehicleTransportData.Total_Amount),
                 new SqlParameter("@Laber", vehicleTransportData.Laber ?? (object)DBNull.Value),
@@ -128,7 +128,7 @@ namespace KrishiLink.Repository.Transport
             {
                 new SqlParameter("@Action", "PUT"),
                 new SqlParameter("@VehicalId", getVehTransportDTO.VehicalId),
-                new SqlParameter("@Number_Plate", getVehTransportDTO.Number_Plate ?? (object)DBNull.Value),
+                new SqlParameter("@Number_Plate", getVehTransportDTO.Vehical_Number ?? (object)DBNull.Value),
                 new SqlParameter("@Total_Weight", getVehTransportDTO.Total_Weight),
                 new SqlParameter("@Total_Amount", getVehTransportDTO.Total_Amount),
                 new SqlParameter("@Laber", getVehTransportDTO.Laber ?? (object)DBNull.Value),
@@ -203,9 +203,9 @@ namespace KrishiLink.Repository.Transport
                 table.Rows.Add(
                     detail.Count,
                     detail.Count_Weight,
-                    detail.Weight,
+                    detail.Total_Weight,
                     detail.Price,
-                    detail.Amount
+                    detail.Total_Amount
                 );
             }
 
@@ -226,9 +226,9 @@ namespace KrishiLink.Repository.Transport
                 table.Rows.Add(
                     detail.Count,
                     detail.Count_Weight,
-                    detail.Weight,
+                    detail.Total_Weight,
                     detail.Price,
-                    detail.Amount
+                    detail.Total_Amount
                 );
             }
 

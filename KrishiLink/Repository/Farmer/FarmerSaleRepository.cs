@@ -1,4 +1,5 @@
 ﻿using KrishiLink.DBContext;
+using KrishiLink.DTO.Farmer;
 using KrishiLink.Models.Farmer;
 using KrishiLink.Repository.Farmer.Interface;
 using Microsoft.Data.SqlClient;
@@ -15,26 +16,30 @@ namespace KrishiLink.Repository.Farmer
             _appDbContext = appDbContext;
         }
 
-        public async Task<IEnumerable<FarmerSale>> GetAllFarmerSaleDetails()
+        public async Task<IEnumerable<FarmerSale>> GetAllFarmerSaleDetails(int userId)
         {
+
             var actionParam = new SqlParameter("@Action", "GET");
 
-            var farmerDetails = await _appDbContext.FarmerSales.FromSqlRaw("EXEC ManageFarmerSales @Action", actionParam).ToListAsync();
-            return farmerDetails;
+            var farmerDetail = await _appDbContext.FarmerSales.FromSqlInterpolated(
+                $"EXEC ManageFarmerSales @Action = {"GET"}, @UserId = {userId}"
+                ).ToListAsync();
+
+            return farmerDetail;
         }
 
-        public async Task<FarmerSale> GetFarmerSaleDetailsById(int id)
+        public async Task<FarmerSale> GetFarmerSaleDetailsById(int id, int userId)
         {
             var actionParam = new SqlParameter("@Action", "GET");
 
             var farmerDetail = await _appDbContext.FarmerSales.FromSqlInterpolated(
-                $"EXEC ManageFarmerSales @Action = {"GET"}, @FarmerID = {id}"
+                $"EXEC ManageFarmerSales @Action = {"GET"}, @FarmerID = {id}, @UserId = {userId}"
                 ).ToListAsync();
 
             return farmerDetail.FirstOrDefault();
         }
 
-        public async Task AddFarmerSaleDetails(FarmerSale farmerSale)
+        public async Task AddFarmerSaleDetails(FarmerSaleDTO farmerSale)
         {
             var parameters = new[]
             {
@@ -46,51 +51,63 @@ namespace KrishiLink.Repository.Farmer
                 new SqlParameter("@Crop_Name", farmerSale.Crop_Name ?? (object)DBNull.Value),
                 new SqlParameter("@Crop_Type", farmerSale.Crop_Type ?? (object)DBNull.Value),
                 new SqlParameter("@Weight", farmerSale.Weight),
-                 new SqlParameter("@Price", farmerSale.Price)
+                new SqlParameter("@Price", farmerSale.Price),
+                new SqlParameter("@Total_Price", farmerSale.Total_Price),
+                new SqlParameter("@UserId", farmerSale.UserId)
             };
 
             await _appDbContext.Database.ExecuteSqlRawAsync(
-                "EXEC ManageFarmerSales @Action, @FarmerId, @Farmer_name, @Mobile, @Village, @Crop_Name, @Crop_Type, @Weight, @Price",
-                parameters
-            );
+                "EXEC ManageFarmerSales " +
+                "@Action, @FarmerId, @Farmer_name, @Mobile, @Village, " +
+                "@Crop_Name, @Crop_Type, @Weight, @Price, @Total_Price, @UserId",
+            parameters);
+
             await _appDbContext.SaveChangesAsync();
         }
 
-        public async Task UpdateFarmerSaleDetails(FarmerSale farmerSale)
+        public async Task UpdateFarmerSaleDetails(FarmerSaleTokenDTO farmerSaleTokenDTO)
         {
             var parameters = new[]
             {
                 new SqlParameter("@Action", "PUT"),
-                new SqlParameter("@FarmerId", farmerSale.FarmerId),
-                new SqlParameter("@Farmer_name", farmerSale.Farmer_name ?? (object)DBNull.Value),
-                new SqlParameter("@Mobile", farmerSale.Mobile ?? (object)DBNull.Value),
-                new SqlParameter("@Village", farmerSale.Village ?? (object)DBNull.Value),
-                new SqlParameter("@Crop_Name", farmerSale.Crop_Name ?? (object)DBNull.Value),
-                new SqlParameter("@Crop_Type", farmerSale.Crop_Type ?? (object)DBNull.Value),
-                new SqlParameter("@Weight", farmerSale.Weight),
-                 new SqlParameter("@Price", farmerSale.Price)
+                new SqlParameter("@FarmerId", farmerSaleTokenDTO.FarmerId),
+                new SqlParameter("@Farmer_name", farmerSaleTokenDTO.Farmer_name ?? (object)DBNull.Value),
+                new SqlParameter("@Mobile", farmerSaleTokenDTO.Mobile ?? (object)DBNull.Value),
+                new SqlParameter("@Village", farmerSaleTokenDTO.Village ?? (object)DBNull.Value),
+                new SqlParameter("@Crop_Name", farmerSaleTokenDTO.Crop_Name ?? (object)DBNull.Value),
+                new SqlParameter("@Crop_Type", farmerSaleTokenDTO.Crop_Type ?? (object)DBNull.Value),
+                new SqlParameter("@Weight", farmerSaleTokenDTO.Weight),
+                new SqlParameter("@Price", farmerSaleTokenDTO.Price),
+                new SqlParameter("@Total_Price", farmerSaleTokenDTO.Total_Price),
+                new SqlParameter("@UserId", farmerSaleTokenDTO.FarmerId),
             };
 
             await _appDbContext.Database.ExecuteSqlRawAsync(
-                "EXEC ManageFarmerSales @Action, @FarmerId, @Farmer_name, @Mobile, @Village, @Crop_Name, @Crop_Type, @Weight, @Price",
+                "EXEC ManageFarmerSales @Action, @FarmerId, @Farmer_name, @Mobile, @Village, @Crop_Name, @Crop_Type, @Weight, @Price, @Total_Price, @UserId",
                 parameters
             );
             await _appDbContext.SaveChangesAsync();
         }
 
-        public async Task DeleteFarmerSaleDetails(int id)
+        public async Task DeleteFarmerSaleDetails(int id, int userId)
         {
-            var actionParam = new SqlParameter("@Action", "DELETE");
+            var parameters = new[]
+            {
+        new SqlParameter("@Action", "DELETE"),
+        new SqlParameter("@FarmerId", id),
+        new SqlParameter("@UserId", userId)
+    };
 
             await _appDbContext.Database.ExecuteSqlRawAsync(
-                  "EXEC ManageFarmerSales @Action, @FarmerId",
-                  actionParam,
-                  new SqlParameter("@FarmerId", id)
-            );
+                @"EXEC ManageFarmerSales 
+              @Action = @Action, 
+              @FarmerId = @FarmerId, 
+              @UserId = @UserId",
+                parameters);
 
             await _appDbContext.SaveChangesAsync();
-
         }
+
 
     }
 }

@@ -5,11 +5,11 @@ namespace KrishiLink.Services.Farmer.Interface
 {
     public interface IFarmerSaleService
     {
-        Task<(bool IsSuccess, string Message, IEnumerable<FarmerSale> Data)> GetAllFarmerSaleDetails();
-        Task<(bool IsSuccess, string Message, FarmerSale Data)> GetFarmerSaleDetailsById(int id);
+        Task<(string status_code, string status_message, IEnumerable<FarmerSale> Data)> GetAllFarmerSaleDetails(int userId, string access_token);
+        Task<(string status_code, string status_message, FarmerSale Data)> GetFarmerSaleDetailsById(int id, int userId, string access_token);
 
-        Task<(bool IsSuccess, string Message)> AddFarmerSaleDetails(FarmerSaleDTO farmerSaleDTO);
-        Task<(bool IsSuccess, string Message)> UpdateFarmerSaleDetails(FarmerSale farmerSale);
-        Task<(bool IsSuccess, string Message)> DeleteFarmerSaleDetails(int id);
+        Task<(string status_code, string status_message)> AddFarmerSaleDetails(FarmerSaleDTO farmerSaleDTO);
+        Task<(string status_code, string status_message)> UpdateFarmerSaleDetails(FarmerSaleTokenDTO farmerSaleTokenDTO);
+        Task<(string status_code, string status_message)> DeleteFarmerSaleDetails(int id, int userId, string accessToken);
     }
 }

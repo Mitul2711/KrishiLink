@@ -1,15 +1,16 @@
-﻿using KrishiLink.Models.Farmer;
+﻿using KrishiLink.DTO.Farmer;
+using KrishiLink.Models.Farmer;
 
 namespace KrishiLink.Repository.Farmer.Interface
 {
     public interface IFarmerSaleRepository
     {
-        public Task<IEnumerable<FarmerSale>> GetAllFarmerSaleDetails();
-        public Task<FarmerSale> GetFarmerSaleDetailsById(int id);
+        public Task<IEnumerable<FarmerSale>> GetAllFarmerSaleDetails(int userId);
+        public Task<FarmerSale> GetFarmerSaleDetailsById(int id, int userId);
 
-        public Task AddFarmerSaleDetails(FarmerSale farmerSale);
-        public Task UpdateFarmerSaleDetails(FarmerSale farmerSale);
+        public Task AddFarmerSaleDetails(FarmerSaleDTO farmerSaleDTO);
+        public Task UpdateFarmerSaleDetails(FarmerSaleTokenDTO farmerSaleTokenDTO);
 
-        public Task DeleteFarmerSaleDetails(int id);
+        public Task DeleteFarmerSaleDetails(int id, int userId);
     }
 }

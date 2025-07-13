@@ -49,7 +49,7 @@ namespace KrishiLink.Service.Transport
 
             var transportData = new VehicleTransportData
             {
-                Number_Plate = vehicleTransportDataDTO.Number_Plate,
+                Vehical_Number = vehicleTransportDataDTO.Number_Plate,
                 Total_Weight = vehicleTransportDataDTO.Total_Weight,
                 Total_Amount = vehicleTransportDataDTO.Total_Amount,
                 Laber = vehicleTransportDataDTO.Laber,
@@ -63,9 +63,9 @@ namespace KrishiLink.Service.Transport
                                             VehicalId = d.VehicalId,
                                             Count = d.Count,
                                             Count_Weight = d.Count_Weight,
-                                            Weight = d.Weight,
+                                            Total_Weight = d.Weight,
                                             Price = d.Price,
-                                            Amount = d.Amount
+                                            Total_Amount = d.Amount
                                         })
                                     .ToList()
 

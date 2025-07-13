@@ -1,9 +1,8 @@
-﻿using Microsoft.EntityFrameworkCore;
-
-namespace KrishiLink.DTO.Farmer
+﻿namespace KrishiLink.DTO.Farmer
 {
-    public class FarmerSaleDTO
+    public class FarmerSaleTokenDTO
     {
+        public int FarmerId { get; set; }
         public int UserId { get; set; }
         public string Access_Token { get; set; }
         public string Farmer_name { get; set; }

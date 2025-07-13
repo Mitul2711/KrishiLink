@@ -6,16 +6,12 @@ namespace KrishiLink.DTO.Transport
     {
         public int Count { get; set; }
 
-        [Precision(18, 2)]
-        public Decimal Count_Weight { get; set; }
+        public string Count_Weight { get; set; }
 
-        [Precision(18, 2)]
-        public Decimal Weight { get; set; }
+        public string Total_Weight { get; set; }
 
-        [Precision(18, 2)]
-        public Decimal Price { get; set; }
+        public string Price { get; set; }
 
-        [Precision(18, 2)]
-        public Decimal Amount { get; set; }
+        public string Total_Amount { get; set; }
     }
 }
