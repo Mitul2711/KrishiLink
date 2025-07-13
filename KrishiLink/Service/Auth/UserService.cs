@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace KrishiLink.Service.Auth
@@ -23,7 +24,7 @@ namespace KrishiLink.Service.Auth
             _Configuration = configuration;
         }
 
-        public async Task<(string status_code, string Message)> RegisterUser(Register register)
+        public async Task<(string status_code, string status_message)> RegisterUser(Register register)
         {
             var userExists = await _userRepository.GetUserAsync(register.Mobile);
 
@@ -46,7 +47,7 @@ namespace KrishiLink.Service.Auth
             return ("1", "User Register Successfully!");
         }
 
-        public async Task<(string status_code, string Message, string Token)> LoginUser(Login login)
+        public async Task<(string status_code, string status_message, string Token)> LoginUser(Login login)
         {
             var userExists = await _userRepository.GetUserAsync(login.Mobile);
             if (userExists == null)
@@ -64,6 +65,7 @@ namespace KrishiLink.Service.Auth
             var matchPassword = _passwordHasher.VerifyHashedPassword(userInfo, userExists.Password, login.Password);
             if(matchPassword == PasswordVerificationResult.Success)
             {
+                var access_token = GenerateAccessToken();
                 var tokenHandler = new JwtSecurityTokenHandler();
                 var key = Encoding.UTF8.GetBytes(_Configuration["Jwt:Key"]);
 
@@ -75,6 +77,7 @@ namespace KrishiLink.Service.Auth
                         new Claim("zipCode", userExists.ZipCode),
                         new Claim("mobile", userExists.Mobile),
                         new Claim("email", userExists.Email),
+                        new Claim("access_token", access_token),
                         new Claim("UserId", userExists.UserId.ToString(),  ClaimValueTypes.Integer),
                     }),
                     Expires = DateTime.UtcNow.AddDays(1),
@@ -84,12 +87,38 @@ namespace KrishiLink.Service.Auth
                 };
 
                 var token = tokenHandler.CreateToken(tokenDescriptor);
+
+                await _userRepository.UpdateUserAsync(userExists.UserId , access_token);
+
                 return ("1", "Login Successfully!", tokenHandler.WriteToken(token));
             } 
             else
             {
                 return ("0", "Wrong Password!", "");
             }
+        }
+
+        private const string _allowed =
+       "ABCDEFGHIJKLMNOPQRSTUVWXYZ" +   // 26 upper
+       "abcdefghijklmnopqrstuvwxyz" +   // 26 lower
+       "0123456789" +                   // 10 digits
+       "!@#$%^&*()-_=+[]{}|;:,.<>?";    // specials (adjust as you like)
+
+        public static string GenerateAccessToken(int length = 10)
+        {
+            if (length <= 0) throw new ArgumentOutOfRangeException(nameof(length));
+
+            var bytes = new byte[length];
+            using var rng = RandomNumberGenerator.Create();
+            rng.GetBytes(bytes);
+
+            var result = new StringBuilder(length);
+            for (int i = 0; i < length; i++)
+            {
+                int idx = bytes[i] % _allowed.Length;
+                result.Append(_allowed[idx]);
+            }
+            return result.ToString();
         }
 
     }

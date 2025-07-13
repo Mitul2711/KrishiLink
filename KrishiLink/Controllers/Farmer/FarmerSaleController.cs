@@ -20,73 +20,73 @@ namespace KrishiLink.Controllers.Farmer
             _farmerSaleService = farmerSaleService;
         }
 
-        [HttpGet("GetAllFarmerSaleDetail")]
-        public async Task<IActionResult> GetAllFarmerSaleDetails()
+        [HttpPost("GetAllFarmerSaleDetail")]
+        public async Task<IActionResult> GetAllFarmerSaleDetails(int userId, string access_token)
         {
-            var (IsSuccess, Message, Data) = await _farmerSaleService.GetAllFarmerSaleDetails();
-            if (!IsSuccess)
+            var (status_code, Message, Data) = await _farmerSaleService.GetAllFarmerSaleDetails(userId, access_token);
+            if (status_code == "0")
             {
-                return NotFound(new { IsSuccess, Message });
+                return NotFound(new { status_code, Message });
             }
             else
             {
-                return Ok(new { IsSuccess, Message, Data });
+                return Ok(new { status_code, Message, Data });
             }
         }
 
-        [HttpGet("GetFarmerSaleDetailById")]
-        public async Task<IActionResult> GetFarmerSaleDetailsById(int id)
+        [HttpPost("GetFarmerSaleDetailById")]
+        public async Task<IActionResult> GetFarmerSaleDetailsById(int id, int userId, string access_token)
         {
-            var (IsSuccess, Message, Data) = await _farmerSaleService.GetFarmerSaleDetailsById(id);
-            if (!IsSuccess)
+            var (status_code, Message, Data) = await _farmerSaleService.GetFarmerSaleDetailsById(id, userId, access_token);
+            if (status_code == "0")
             {
-                return NotFound(new { IsSuccess, Message });
+                return NotFound(new { status_code, Message });
             }
             else
             {
-                return Ok(new { IsSuccess, Message, Data });
+                return Ok(new { status_code, Message, Data });
             }
         }
 
         [HttpPost("AddFarmerSaleDetail")]
         public async Task<ActionResult> AddFarmerSaleDetails(FarmerSaleDTO farmerSaleDTO)
         {
-            var (IsSuccess, Message) = await _farmerSaleService.AddFarmerSaleDetails(farmerSaleDTO);
-            if (!IsSuccess)
+            var (status_code, Message) = await _farmerSaleService.AddFarmerSaleDetails(farmerSaleDTO);
+            if (status_code == "0")
             {
-                return NotFound(new { IsSuccess, Message });
+                return NotFound(new { status_code, Message });
             }
             else
             {
-                return Ok(new { IsSuccess, Message });
+                return Ok(new { status_code, Message });
             }
         }
 
-        [HttpPut("UpdateFarmerSaleDetail")]
-        public async Task<ActionResult> UpdateFarmerSaleDetails(FarmerSale farmerSale)
+        [HttpPost("UpdateFarmerSaleDetail")]
+        public async Task<ActionResult> UpdateFarmerSaleDetails(FarmerSaleTokenDTO farmerSaleTokenDTO)
         {
-            var (IsSuccess, Message) = await _farmerSaleService.UpdateFarmerSaleDetails(farmerSale);
-            if (!IsSuccess)
+            var (status_code, Message) = await _farmerSaleService.UpdateFarmerSaleDetails(farmerSaleTokenDTO);
+            if (status_code == "0")
             {
-                return NotFound(new { IsSuccess, Message });
+                return NotFound(new { status_code, Message });
             }
             else
             {
-                return Ok(new { IsSuccess, Message });
+                return Ok(new { status_code, Message });
             }
         }
 
-        [HttpDelete("DeleteFarmerSaleDetail")]
-        public async Task<ActionResult> DeleteFarmerSaleDetails(int id)
+        [HttpPost("DeleteFarmerSaleDetail")]
+        public async Task<ActionResult> DeleteFarmerSaleDetails(int id, int userId, string accessToken)
         {
-            var (IsSuccess, Message) = await _farmerSaleService.DeleteFarmerSaleDetails(id);
-            if (!IsSuccess)
+            var (status_code, Message) = await _farmerSaleService.DeleteFarmerSaleDetails(id, userId, accessToken);
+            if (status_code == "0")
             {
-                return NotFound(new { IsSuccess, Message });
+                return NotFound(new { status_code, Message });
             }
             else
             {
-                return Ok(new { IsSuccess, Message });
+                return Ok(new { status_code, Message });
             }
         }
     }

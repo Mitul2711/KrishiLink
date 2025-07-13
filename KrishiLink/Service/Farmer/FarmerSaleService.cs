@@ -1,5 +1,7 @@
-﻿using KrishiLink.DTO.Farmer;
+﻿using Azure.Core;
+using KrishiLink.DTO.Farmer;
 using KrishiLink.Models.Farmer;
+using KrishiLink.Repository.Auth.Interface;
 using KrishiLink.Repository.Farmer.Interface;
 using KrishiLink.Services.Farmer.Interface;
 
@@ -9,107 +11,131 @@ namespace KrishiLink.Service.Farmer
     {
         private readonly IFarmerSaleRepository _farmerSaleRepository;
 
-        public FarmerSaleService(IFarmerSaleRepository farmerSaleRepository)
+        public IUserRepository _UserRepository { get; }
+
+        public FarmerSaleService(IFarmerSaleRepository farmerSaleRepository, IUserRepository userRepository)
         {
             _farmerSaleRepository = farmerSaleRepository;
+            _UserRepository = userRepository;
         }
 
-        public async Task<(bool IsSuccess, string Message, IEnumerable<FarmerSale> Data)> GetAllFarmerSaleDetails()
+        public async Task<(string status_code, string status_message, IEnumerable<FarmerSale> Data)> GetAllFarmerSaleDetails(int userId, string access_token)
         {
-            var result = await _farmerSaleRepository.GetAllFarmerSaleDetails();
+            var isAccess = await _UserRepository.CheckAccess(userId, access_token);
+            if(isAccess == null)
+            {
+                return ("0", "Session Expired!", null);
+            }
+
+            var result = await _farmerSaleRepository.GetAllFarmerSaleDetails(userId);
             if (result == null || !result.Any())
             {
-                return (false, "No farmer sales data found.", null);
+                return ("0", "No farmer sales data found.", null);
             }
 
-            return (true, "Farmer sales data retrieved successfully.", result);
+            return ("1", "Farmer sales data retrieved successfully.", result);
         }
 
-        public async Task<(bool IsSuccess, string Message, FarmerSale Data)> GetFarmerSaleDetailsById(int id)
+        public async Task<(string status_code, string status_message, FarmerSale Data)> GetFarmerSaleDetailsById(int id, int userId, string access_token)
         {
-            var result = await _farmerSaleRepository.GetFarmerSaleDetailsById(id);
+
+            var isAccess = await _UserRepository.CheckAccess(userId, access_token);
+            if (isAccess == null)
+            {
+                return ("0", "Session Expired!", null);
+            }
+
+            var result = await _farmerSaleRepository.GetFarmerSaleDetailsById(id, userId);
             if (result == null)
             {
-                return (false, $"No farmer sale found with ID = {id}.", null);
+                return ("0", $"No farmer sale found with ID = {id}.", null);
             }
 
-            return (true, "Farmer sale data retrieved successfully.", result);
+            return ("1", "Farmer sale data retrieved successfully.", result);
         }
 
-        public async Task<(bool IsSuccess, string Message)> AddFarmerSaleDetails(FarmerSaleDTO farmerSaleDTO)
+        public async Task<(string status_code, string status_message)> AddFarmerSaleDetails(FarmerSaleDTO farmerSaleDTO)
         {
+
+            var isAccess = await _UserRepository.CheckAccess(farmerSaleDTO.UserId, farmerSaleDTO.Access_Token);
+            if (isAccess == null)
+            {
+                return ("0", "Session Expired!");
+            }
             if (farmerSaleDTO == null)
             {
-                return (false, "Data is required.");
+                return ("0", "Data is required.");
             }
 
             try
             {
-                var farmerDetail = new FarmerSale
-                {
-                    Farmer_name = farmerSaleDTO.Farmer_name,
-                    Mobile = farmerSaleDTO.Mobile,
-                    Village = farmerSaleDTO.Village,
-                    Crop_Name = farmerSaleDTO.Crop_Name,
-                    Crop_Type = farmerSaleDTO.Crop_Type,
-                    Weight = farmerSaleDTO.Weight,
-                    Price = farmerSaleDTO.Price
-                };
-
-                await _farmerSaleRepository.AddFarmerSaleDetails(farmerDetail);
-                return (true, "Data added successfully!");
+                await _farmerSaleRepository.AddFarmerSaleDetails(farmerSaleDTO);
+                return ("1", "Data added successfully!");
             }
             catch (Exception ex)
             {
-                return (false, $"Failed to add data: {ex.Message}");
+                return ("0", $"Failed to add data: {ex.Message}");
             }
         }
 
-        public async Task<(bool IsSuccess, string Message)> UpdateFarmerSaleDetails(FarmerSale farmerSale)
+        public async Task<(string status_code, string status_message)> UpdateFarmerSaleDetails(FarmerSaleTokenDTO farmerSaleTokenDTO)
         {
-            if (farmerSale == null)
+            var isAccess = await _UserRepository.CheckAccess(farmerSaleTokenDTO.UserId, farmerSaleTokenDTO.Access_Token);
+            if (isAccess == null)
             {
-                return (false, "Data is required.");
+                return ("0", "Session Expired!");
             }
 
-            var data = await _farmerSaleRepository.GetFarmerSaleDetailsById(farmerSale.FarmerId);
+            if (farmerSaleTokenDTO == null)
+            {
+                return ("0", "Data is required.");
+            }
+
+            var data = await _farmerSaleRepository.GetFarmerSaleDetailsById(farmerSaleTokenDTO.FarmerId, farmerSaleTokenDTO.UserId);
             if (data == null)
             {
-                return (false, "Data Not Found");
+                return ("0", "Data Not Found");
             }
 
             try
             {
-                await _farmerSaleRepository.UpdateFarmerSaleDetails(farmerSale);
-                return (true, "Data updated successfully!");
+                await _farmerSaleRepository.UpdateFarmerSaleDetails(farmerSaleTokenDTO);
+                return ("1", "Data updated successfully!");
             }
             catch (Exception ex)
             {
-                return (false, $"Failed to update data: {ex.Message}");
+                return ("0", $"Failed to update data: {ex.Message}");
             }
         }
 
-        public async Task<(bool IsSuccess, string Message)> DeleteFarmerSaleDetails(int id)
+        public async Task<(string status_code, string status_message)> DeleteFarmerSaleDetails(int id, int userId, string accessToken)
         {
-            if(id == 0)
+
+            var isAccess = await _UserRepository.CheckAccess(userId, accessToken);
+            if (isAccess == null)
             {
-                return (false, "Id Is Not Exists!");
+                return ("0", "Session Expired!");
+
+            }
+            if (id == 0)
+            {
+                return ("0", "Id Is Not Exists!");
             }
 
-            var data = await _farmerSaleRepository.GetFarmerSaleDetailsById(id);
+            var data = await _farmerSaleRepository.GetFarmerSaleDetailsById(id, userId);
             if (data == null)
             {
-                return (false, "Data Not Found");
+                return ("0", "Data Not Found");
             }
 
             try
             {
-                await _farmerSaleRepository.DeleteFarmerSaleDetails(id);
-                return (true, "Data Deleted");
+                await _farmerSaleRepository.DeleteFarmerSaleDetails(id, userId);
+                return ("1", "Data Deleted");
             }
             catch (Exception ex)
             {
-                return (false, $"Failed to Delete data: {ex.Message}");
+                return ("0", $"Failed to Delete data: {ex.Message}");
             }
             
         }

@@ -10,10 +10,8 @@ namespace KrishiLink.DTO.Broker
         public string Crop_Name { get; set; }
         public string Crop_Type { get; set; }
 
-        [Precision(18, 2)]
-        public Decimal Weight { get; set; }
+        public string Weight { get; set; }
 
-        [Precision(18, 2)]
-        public Decimal Price { get; set; }
+        public string Price { get; set; }
     }
 }
