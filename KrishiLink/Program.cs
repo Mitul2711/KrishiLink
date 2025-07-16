@@ -99,33 +99,46 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
+//builder.Services.AddCors(options =>
+//{
+//    options.AddPolicy("AllowUi",
+//        policy =>
+//        {
+//            // Allow http://localhost:4200 for local dev
+//            // and anything that ends with .app.github.dev
+//            policy
+//                .SetIsOriginAllowed(origin =>
+//                {
+//                    var uri = new Uri(origin);
+
+//                    // Codespaces preview URLs look like
+//                    //  https://<slug>-<port>.app.github.dev
+//                    bool isCodespace = uri.Host.EndsWith(".app.github.dev",
+//                                                          StringComparison.OrdinalIgnoreCase);
+
+//                    bool isLocalAngular = origin.Equals("http://localhost:4200",
+//                                                         StringComparison.OrdinalIgnoreCase);
+
+//                    return isCodespace || isLocalAngular;
+//                })
+//                .AllowAnyHeader()
+//                .AllowAnyMethod()
+//                .AllowCredentials();  // only if you really need cookies
+//        });
+//});
+
+
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowUi",
-        policy =>
-        {
-            // Allow http://localhost:4200 for local dev
-            // and anything that ends with .app.github.dev
-            policy
-                .SetIsOriginAllowed(origin =>
-                {
-                    var uri = new Uri(origin);
-
-                    // Codespaces preview URLs look like
-                    //  https://<slug>-<port>.app.github.dev
-                    bool isCodespace = uri.Host.EndsWith(".app.github.dev",
-                                                          StringComparison.OrdinalIgnoreCase);
-
-                    bool isLocalAngular = origin.Equals("http://localhost:4200",
-                                                         StringComparison.OrdinalIgnoreCase);
-
-                    return isCodespace || isLocalAngular;
-                })
-                .AllowAnyHeader()
-                .AllowAnyMethod()
-                .AllowCredentials();  // only if you really need cookies
-        });
+    options.AddPolicy("AllowUi", policy =>
+    {
+        policy.WithOrigins("http://localhost:4200")
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials(); // Optional: use only if your frontend sends cookies or credentials
+    });
 });
+
 
 
 builder.Services.AddControllers();
