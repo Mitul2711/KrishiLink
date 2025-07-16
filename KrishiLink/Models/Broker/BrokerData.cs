@@ -14,14 +14,14 @@ namespace KrishiLink.Models.Broker
         public string Crop_Name { get; set; }
         public string Crop_Type { get; set; }
 
-        public string Weight { get; set; }
+        public decimal Weight { get; set; }
 
-        public string Price { get; set; }
+        public decimal Price { get; set; }
 
-        public string Count { get; set; }
-        public string Total_Amount { get; set; }
+        public decimal Count { get; set; }
+        public decimal Total_Amount { get; set; }
 
-        public string Total_Brokerage { get; set; }
+        public decimal Total_Brokerage { get; set; }
 
         public DateTime Created_At { get; set; } = DateTime.UtcNow;
         public DateTime Updated_At { get; set; } = DateTime.UtcNow;

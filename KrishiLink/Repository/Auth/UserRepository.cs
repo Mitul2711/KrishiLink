@@ -1,8 +1,5 @@
-﻿using System.Reflection;
-using KrishiLink.DBContext;
-using KrishiLink.DTO;
+﻿using KrishiLink.DBContext;
 using KrishiLink.Models.Auth;
-using KrishiLink.Models.Farmer;
 using KrishiLink.Repository.Auth.Interface;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
@@ -34,7 +31,7 @@ namespace KrishiLink.Repository.Auth
                 new SqlParameter("@Action", "POST"),
                 new SqlParameter("@UserId", DBNull.Value),
                 new SqlParameter("@Mobile", userData.Mobile ?? (object)DBNull.Value),
-                new SqlParameter("@Access_Token", ""), 
+                new SqlParameter("@Access_Token", ""),
                 new SqlParameter("@Business_Name", userData.Business_Name ?? (object)DBNull.Value),
                 new SqlParameter("@Email", userData.Email ?? (object)DBNull.Value),
                 new SqlParameter("@Password", userData.Password ?? (object)DBNull.Value),

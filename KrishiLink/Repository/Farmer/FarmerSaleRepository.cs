@@ -83,7 +83,8 @@ namespace KrishiLink.Repository.Farmer
             };
 
             await _appDbContext.Database.ExecuteSqlRawAsync(
-                "EXEC ManageFarmerSales @Action, @FarmerId, @Farmer_name, @Mobile, @Village, @Crop_Name, @Crop_Type, @Weight, @Price, @Total_Price, @UserId",
+                "EXEC ManageFarmerSales @Action, @FarmerId, @Farmer_name, @Mobile, @Village, @Crop_Name, @Crop_Type, @Weight, @Price," +
+                " @Total_Price, @UserId",
                 parameters
             );
             await _appDbContext.SaveChangesAsync();

@@ -1,6 +1,5 @@
 ﻿using KrishiLink.DBContext;
 using KrishiLink.DTO.Transport;
-using KrishiLink.Models.Farmer;
 using KrishiLink.Models.Transport;
 using KrishiLink.Repository.Transport.Interface;
 using Microsoft.Data.SqlClient;
@@ -27,33 +26,42 @@ namespace KrishiLink.Repository.Transport
 
             return data.FirstOrDefault();
         }
-        public async Task<IEnumerable<GetVehTransportDTO>> GetAllVehTransportDetail()
+        public async Task<IEnumerable<GetVehTransportDTO>> GetAllVehTransportDetail(int userId)
         {
             using var conn = _appDbContext.Database.GetDbConnection();
             await conn.OpenAsync();
 
-            using var command = conn.CreateCommand();
-            command.CommandText = "EXEC SP_InsertVehicleWithTransfers @Action = 'GET'";
-            using var reader = await command.ExecuteReaderAsync();
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = @"
+        EXEC SP_InsertVehicleWithTransfers 
+             @Action = @action, 
+             @UserId = @uid";
+            cmd.Parameters.Add(new SqlParameter("@action", "GET"));
+            cmd.Parameters.Add(new SqlParameter("@uid", userId));
 
-            string json = "";
-            if (await reader.ReadAsync())
+            using var rdr = await cmd.ExecuteReaderAsync();
+
+            string json = null;
+            if (await rdr.ReadAsync() && !rdr.IsDBNull(0))
             {
-                json = reader.GetString(0);
+                json = rdr.GetString(0);
             }
 
             await conn.CloseAsync();
 
-            return JsonConvert.DeserializeObject<List<GetVehTransportDTO>>(json);
+            return string.IsNullOrEmpty(json)
+                   ? new List<GetVehTransportDTO>()
+                   : JsonConvert.DeserializeObject<List<GetVehTransportDTO>>(json);
         }
 
-        public async Task<IEnumerable<GetVehTransportDTO>> GetVehTransportDetailById(int id)
+
+        public async Task<IEnumerable<GetVehTransportDTO>> GetVehTransportDetailById(int id, int userId)
         {
             using var conn = _appDbContext.Database.GetDbConnection();
             await conn.OpenAsync();
 
             using var command = conn.CreateCommand();
-            command.CommandText = "EXEC SP_InsertVehicleWithTransfers @Action = @ActionParam, @VehicalId = @VehicalIdParam";
+            command.CommandText = "EXEC SP_InsertVehicleWithTransfers @Action = @ActionParam, @VehicalId = @VehicalIdParam, @UserId=@UserId";
 
             var actionParam = command.CreateParameter();
             actionParam.ParameterName = "@ActionParam";
@@ -64,6 +72,11 @@ namespace KrishiLink.Repository.Transport
             idParam.ParameterName = "@VehicalIdParam";
             idParam.Value = id;
             command.Parameters.Add(idParam);
+
+            var userIdParam = command.CreateParameter();
+            userIdParam.ParameterName = "@UserId";
+            userIdParam.Value = userId;
+            command.Parameters.Add(userIdParam);
 
             using var reader = await command.ExecuteReaderAsync();
 
@@ -94,14 +107,16 @@ namespace KrishiLink.Repository.Transport
             {
                 new SqlParameter("@Action", "POST"),
                 new SqlParameter("@VehicalId", DBNull.Value),
-                new SqlParameter("@Vehical_Number", vehicleTransportData.Vehical_Number ?? (object)DBNull.Value),
+                new SqlParameter("@Vehical_Number", vehicleTransportData.Vehical_Number),
                 new SqlParameter("@Total_Weight", vehicleTransportData.Total_Weight),
                 new SqlParameter("@Total_Amount", vehicleTransportData.Total_Amount),
-                new SqlParameter("@Laber", vehicleTransportData.Laber ?? (object)DBNull.Value),
-                new SqlParameter("@Brokerage", vehicleTransportData.Brokerage?? (object)DBNull.Value),
-                new SqlParameter("@Market_Shake", vehicleTransportData.Market_Shake ?? (object)DBNull.Value),
-                new SqlParameter("@Commission", vehicleTransportData.Commission ?? (object)DBNull.Value),
+                new SqlParameter("@Laber", vehicleTransportData.Laber),
+                new SqlParameter("@Brokerage", vehicleTransportData.Brokerage),
+                new SqlParameter("@Market_Shake", vehicleTransportData.Market_Shake),
+                new SqlParameter("@Commission", vehicleTransportData.Commission),
                 new SqlParameter("@Final_Amount", vehicleTransportData.Final_Amount),
+                new SqlParameter("@Total_Count", vehicleTransportData.Total_Count),
+                new SqlParameter("@UserId", vehicleTransportData.UserId),
                 new SqlParameter
                 {
                     ParameterName = "@TransferDetails",
@@ -112,30 +127,32 @@ namespace KrishiLink.Repository.Transport
             };
 
             await _appDbContext.Database.ExecuteSqlRawAsync(
-                    "EXEC SP_InsertVehicleWithTransfers @Action, @VehicalId, @Number_Plate, @Total_Weight, @Total_Amount, @Laber, @Brokerage, @Market_Shake, @Commission, @Final_Amount, @TransferDetails",
+                    "EXEC SP_InsertVehicleWithTransfers @Action, @VehicalId, @Vehical_Number, @Total_Weight, @Total_Amount, @Laber," +
+                    " @Brokerage, @Market_Shake, @Commission, @Final_Amount, @Total_Count, @UserId, @TransferDetails",
                     parameters
             );
             await _appDbContext.SaveChangesAsync();
 
         }
 
-        public async Task UpdateVehTransportDetail(GetVehTransportDTO getVehTransportDTO)
+        public async Task UpdateVehTransportDetail(VehicalTransportDataTokenDTO vehicalTransportDataTokenDTO)
         {
-
-            var detailTable = ConvertToTransferDetailDataDTOTable(getVehTransportDTO.Transfer_Detail);
+            var detailTable = ConvertToTransferDetailDataDTOTable(vehicalTransportDataTokenDTO.Transfer_Detail);
 
             var parameters = new[]
             {
                 new SqlParameter("@Action", "PUT"),
-                new SqlParameter("@VehicalId", getVehTransportDTO.VehicalId),
-                new SqlParameter("@Number_Plate", getVehTransportDTO.Vehical_Number ?? (object)DBNull.Value),
-                new SqlParameter("@Total_Weight", getVehTransportDTO.Total_Weight),
-                new SqlParameter("@Total_Amount", getVehTransportDTO.Total_Amount),
-                new SqlParameter("@Laber", getVehTransportDTO.Laber ?? (object)DBNull.Value),
-                new SqlParameter("@Brokerage", getVehTransportDTO.Brokerage?? (object)DBNull.Value),
-                new SqlParameter("@Market_Shake", getVehTransportDTO.Market_Shake ?? (object)DBNull.Value),
-                new SqlParameter("@Commission", getVehTransportDTO.Commission ?? (object)DBNull.Value),
-                new SqlParameter("@Final_Amount", getVehTransportDTO.Final_Amount),
+                new SqlParameter("@VehicalId", vehicalTransportDataTokenDTO.VehicalId),
+                new SqlParameter("@Vehical_Number", vehicalTransportDataTokenDTO.Vehical_Number ?? (object)DBNull.Value),
+                new SqlParameter("@Total_Weight", vehicalTransportDataTokenDTO.Total_Weight),
+                new SqlParameter("@Total_Amount", vehicalTransportDataTokenDTO.Total_Amount),
+                new SqlParameter("@Laber", vehicalTransportDataTokenDTO.Laber),
+                new SqlParameter("@Brokerage", vehicalTransportDataTokenDTO.Brokerage),
+                new SqlParameter("@Market_Shake", vehicalTransportDataTokenDTO.Market_Shake),
+                new SqlParameter("@Commission", vehicalTransportDataTokenDTO.Commission),
+                new SqlParameter("@Final_Amount", vehicalTransportDataTokenDTO.Final_Amount),
+                new SqlParameter("@Total_Count", vehicalTransportDataTokenDTO.Total_Count),
+                new SqlParameter("@UserId", vehicalTransportDataTokenDTO.UserId),
                 new SqlParameter
                 {
                     ParameterName = "@TransferDetails",
@@ -146,27 +163,30 @@ namespace KrishiLink.Repository.Transport
             };
 
             await _appDbContext.Database.ExecuteSqlRawAsync(
-                    "EXEC SP_InsertVehicleWithTransfers @Action, @VehicalId, @Number_Plate, @Total_Weight, @Total_Amount, @Laber, @Brokerage, @Market_Shake, @Commission, @Final_Amount, @TransferDetails",
-                    parameters
+                "EXEC SP_InsertVehicleWithTransfers " +
+                "@Action, @VehicalId, @Vehical_Number, @Total_Weight, @Total_Amount, @Laber, " +
+                "@Brokerage, @Market_Shake, @Commission, @Final_Amount, @Total_Count, @UserId, @TransferDetails",
+                parameters
             );
-            await _appDbContext.SaveChangesAsync();
 
+            await _appDbContext.SaveChangesAsync();
         }
 
-        public async Task DeleteVehTransportDetail(int id)
+
+        public async Task DeleteVehTransportDetail(int id, int userId)
         {
             var table = new DataTable();
-            table.Columns.Add("Count", typeof(int));
-            table.Columns.Add("Count_Weight", typeof(decimal));
-            table.Columns.Add("Weight", typeof(decimal));
-            table.Columns.Add("Price", typeof(decimal));
-            table.Columns.Add("Amount", typeof(decimal));
+            table.Columns.Add("Count", typeof(string));
+            table.Columns.Add("Count_Weight", typeof(string));
+            table.Columns.Add("Total_Weight", typeof(string));
+            table.Columns.Add("Price", typeof(string));
+            table.Columns.Add("Total_Amount", typeof(string));
 
             var parameters = new[]
             {
                 new SqlParameter("@Action", "DELETE"),
                 new SqlParameter("@VehicalId", id),
-                new SqlParameter("@Number_Plate", DBNull.Value),
+               new SqlParameter("@Vehical_Number", DBNull.Value),
                 new SqlParameter("@Total_Weight", DBNull.Value),
                 new SqlParameter("@Total_Amount", DBNull.Value),
                 new SqlParameter("@Laber", DBNull.Value),
@@ -174,6 +194,8 @@ namespace KrishiLink.Repository.Transport
                 new SqlParameter("@Market_Shake", DBNull.Value),
                 new SqlParameter("@Commission", DBNull.Value),
                 new SqlParameter("@Final_Amount", DBNull.Value),
+                new SqlParameter("@Total_Count", DBNull.Value),
+                new SqlParameter("@UserId", userId),
                 new SqlParameter
                 {
                     ParameterName = "@TransferDetails",
@@ -184,7 +206,8 @@ namespace KrishiLink.Repository.Transport
             };
 
             var result = await _appDbContext.Database.ExecuteSqlRawAsync(
-                "EXEC SP_InsertVehicleWithTransfers @Action, @VehicalId, @Number_Plate, @Total_Weight, @Total_Amount, @Laber, @Brokerage, @Market_Shake, @Commission, @Final_Amount, @TransferDetails",
+                "EXEC SP_InsertVehicleWithTransfers @Action, @VehicalId, @Vehical_Number, @Total_Weight, @Total_Amount, " +
+                "@Laber, @Brokerage, @Market_Shake, @Commission, @Final_Amount, @Total_Count, @UserId, @TransferDetails",
                 parameters);
 
         }
@@ -192,11 +215,11 @@ namespace KrishiLink.Repository.Transport
         private DataTable ConvertToTransferDetailDataTable(List<TransferDetail> details)
         {
             var table = new DataTable();
-            table.Columns.Add("Count", typeof(int));
-            table.Columns.Add("Count_Weight", typeof(decimal));
-            table.Columns.Add("Weight", typeof(decimal));
-            table.Columns.Add("Price", typeof(decimal));
-            table.Columns.Add("Amount", typeof(decimal));
+            table.Columns.Add("Count", typeof(string));
+            table.Columns.Add("Count_Weight", typeof(string));
+            table.Columns.Add("Total_Weight", typeof(string));
+            table.Columns.Add("Price", typeof(string));
+            table.Columns.Add("Total_Amount", typeof(string));
 
             foreach (var detail in details)
             {
@@ -212,14 +235,14 @@ namespace KrishiLink.Repository.Transport
             return table;
         }
 
-        private DataTable ConvertToTransferDetailDataDTOTable(List<GetTransferDetailDTO> details)
+        private DataTable ConvertToTransferDetailDataDTOTable(List<TransferDetailDto> details)
         {
             var table = new DataTable();
-            table.Columns.Add("Count", typeof(int));
-            table.Columns.Add("Count_Weight", typeof(decimal));
-            table.Columns.Add("Weight", typeof(decimal));
-            table.Columns.Add("Price", typeof(decimal));
-            table.Columns.Add("Amount", typeof(decimal));
+            table.Columns.Add("Count", typeof(string));
+            table.Columns.Add("Count_Weight", typeof(string));
+            table.Columns.Add("Total_Weight", typeof(string));
+            table.Columns.Add("Price", typeof(string));
+            table.Columns.Add("Total_Amount", typeof(string));
 
             foreach (var detail in details)
             {

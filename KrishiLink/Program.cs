@@ -101,15 +101,32 @@ builder.Services.AddSwaggerGen(c =>
 
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowSpecificOrigin",
+    options.AddPolicy("AllowUi",
         policy =>
         {
-            policy.WithOrigins("http://localhost:4200") // Angular frontend or other client URL
-                  .AllowAnyHeader()
-                  .AllowAnyMethod()
-                  .AllowCredentials(); // Optional: Only needed if sending cookies
+            // Allow http://localhost:4200 for local dev
+            // and anything that ends with .app.github.dev
+            policy
+                .SetIsOriginAllowed(origin =>
+                {
+                    var uri = new Uri(origin);
+
+                    // Codespaces preview URLs look like
+                    //  https://<slug>-<port>.app.github.dev
+                    bool isCodespace = uri.Host.EndsWith(".app.github.dev",
+                                                          StringComparison.OrdinalIgnoreCase);
+
+                    bool isLocalAngular = origin.Equals("http://localhost:4200",
+                                                         StringComparison.OrdinalIgnoreCase);
+
+                    return isCodespace || isLocalAngular;
+                })
+                .AllowAnyHeader()
+                .AllowAnyMethod()
+                .AllowCredentials();  // only if you really need cookies
         });
 });
+
 
 builder.Services.AddControllers();
 
@@ -124,7 +141,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.UseCors("AllowSpecificOrigin");
+app.UseCors("AllowUi");
 
 // Enable authentication and authorization
 app.UseAuthentication();

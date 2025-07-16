@@ -63,7 +63,7 @@ namespace KrishiLink.Service.Auth
                 Business_Name = userExists.Business_Name,
             };
             var matchPassword = _passwordHasher.VerifyHashedPassword(userInfo, userExists.Password, login.Password);
-            if(matchPassword == PasswordVerificationResult.Success)
+            if (matchPassword == PasswordVerificationResult.Success)
             {
                 var access_token = GenerateAccessToken();
                 var tokenHandler = new JwtSecurityTokenHandler();
@@ -88,10 +88,10 @@ namespace KrishiLink.Service.Auth
 
                 var token = tokenHandler.CreateToken(tokenDescriptor);
 
-                await _userRepository.UpdateUserAsync(userExists.UserId , access_token);
+                await _userRepository.UpdateUserAsync(userExists.UserId, access_token);
 
                 return ("1", "Login Successfully!", tokenHandler.WriteToken(token));
-            } 
+            }
             else
             {
                 return ("0", "Wrong Password!", "");

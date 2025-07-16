@@ -1,15 +1,10 @@
-﻿using KrishiLink.DTO.Broker;
-using KrishiLink.DTO.Farmer;
-using KrishiLink.Models.Broker;
-using KrishiLink.Models.Farmer;
+﻿using KrishiLink.DTO.Access_Token;
+using KrishiLink.DTO.Broker;
 using KrishiLink.Service.Broker.Interface;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace KrishiLink.Controllers.Broker
 {
-    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class BrokerDataController : ControllerBase
@@ -21,73 +16,73 @@ namespace KrishiLink.Controllers.Broker
             _brokerDataService = brokerDataService;
         }
 
-        [HttpGet("GetAllBrokerData")]
-        public async Task<IActionResult> GetAllBrokerData()
+        [HttpPost("GetAllBrokerData")]
+        public async Task<IActionResult> GetAllBrokerData(Access_TokenDTO access_TokenDTO)
         {
-            var (IsSuccess, Message, Data) = await _brokerDataService.GetAllBrokerData();
-            if (!IsSuccess)
+            var (status_code, status_message, Data) = await _brokerDataService.GetAllBrokerData(access_TokenDTO.UserId, access_TokenDTO.AccessToken);
+            if (status_code == "0")
             {
-                return NotFound(new { IsSuccess, Message });
+                return Ok(new { status_code, status_message });
             }
             else
             {
-                return Ok(new { IsSuccess, Message, Data });
+                return Ok(new { status_code, status_message, Data });
             }
         }
 
-        [HttpGet("GetBrokerDataById")]
-        public async Task<IActionResult> GetBrokerDataById(int id)
+        [HttpPost("GetBrokerDataById")]
+        public async Task<IActionResult> GetBrokerDataById(int id, int userId, string access_token)
         {
-            var (IsSuccess, Message, Data) = await _brokerDataService.GetBrokerDataById(id);
-            if (!IsSuccess)
+            var (status_code, status_message, Data) = await _brokerDataService.GetBrokerDataById(id, userId, access_token);
+            if (status_code == "0")
             {
-                return NotFound(new { IsSuccess, Message });
+                return Ok(new { status_code, status_message });
             }
             else
             {
-                return Ok(new { IsSuccess, Message, Data });
+                return Ok(new { status_code, status_message, Data });
             }
         }
 
         [HttpPost("AddBrokerData")]
         public async Task<ActionResult> AddBrokerData(BrokerDataDTO brokerDataDTO)
         {
-            var (IsSuccess, Message) = await _brokerDataService.AddBrokerData(brokerDataDTO);
-            if (!IsSuccess)
+            var (status_code, status_message) = await _brokerDataService.AddBrokerData(brokerDataDTO);
+            if (status_code == "0")
             {
-                return NotFound(new { IsSuccess, Message });
+                return Ok(new { status_code, status_message });
             }
             else
             {
-                return Ok(new { IsSuccess, Message });
+                return Ok(new { status_code, status_message });
             }
         }
 
-        [HttpPut("UpdateBrokerData")]
-        public async Task<ActionResult> UpdateBrokerData(BrokerData brokerData)
+        [HttpPost("UpdateBrokerData")]
+        public async Task<ActionResult> UpdateBrokerData(BrokerSaleTokenDTO brokerSaleTokenDTO)
         {
-            var (IsSuccess, Message) = await _brokerDataService.UpdateBrokerData(brokerData);
-            if (!IsSuccess)
+            var (status_code, status_message) = await _brokerDataService.UpdateBrokerData(brokerSaleTokenDTO);
+            if (status_code == "0")
             {
-                return NotFound(new { IsSuccess, Message });
+                return Ok(new { status_code, status_message });
             }
             else
             {
-                return Ok(new { IsSuccess, Message });
+                return Ok(new { status_code, status_message });
             }
         }
 
-        [HttpDelete("DeleteBrokerData")]
-        public async Task<ActionResult> DeleteBrokerData(int id)
+        [HttpPost("DeleteBrokerData")]
+        public async Task<ActionResult> DeleteBrokerData(int id, int userId, string access_token)
         {
-            var (IsSuccess, Message) = await _brokerDataService.DeleteBrokerData(id);
-            if (!IsSuccess)
+            var (status_code, status_message) = await _brokerDataService.DeleteBrokerData(id, userId, access_token);
+            if (status_code == "0")
             {
-                return NotFound(new { IsSuccess, Message });
+                return Ok(new { status_code, status_message });
             }
             else
             {
-                return Ok(new { IsSuccess, Message });
+                return Ok(new { status_code, status_message });
             }
         }
 

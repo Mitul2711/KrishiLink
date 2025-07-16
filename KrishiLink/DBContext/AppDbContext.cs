@@ -12,7 +12,7 @@ namespace KrishiLink.DBContext
     {
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
         {
-            
+
         }
 
         public DbSet<FarmerSale> FarmerSales { get; set; }
@@ -27,13 +27,18 @@ namespace KrishiLink.DBContext
         {
             base.OnModelCreating(modelBuilder);
 
-            modelBuilder.Entity<CheckVehTransportDTO>().HasNoKey();
+            modelBuilder.Entity<CheckVehTransportDTO>(entity =>
+            {
+                entity.HasNoKey();     // Keyless
+                entity.ToView(null);   // No table/view generated
+            });
 
             modelBuilder.Entity<TransferDetail>()
                 .HasOne(t => t.VehicleTransportData)
                 .WithMany(v => v.Transfer_Detail)
                 .HasForeignKey(t => t.VehicalId);
         }
+
 
     }
 }
