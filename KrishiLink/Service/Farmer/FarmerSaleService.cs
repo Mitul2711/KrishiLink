@@ -1,5 +1,4 @@
-﻿using Azure.Core;
-using KrishiLink.DTO.Farmer;
+﻿using KrishiLink.DTO.Farmer;
 using KrishiLink.Models.Farmer;
 using KrishiLink.Repository.Auth.Interface;
 using KrishiLink.Repository.Farmer.Interface;
@@ -22,7 +21,7 @@ namespace KrishiLink.Service.Farmer
         public async Task<(string status_code, string status_message, IEnumerable<FarmerSale> Data)> GetAllFarmerSaleDetails(int userId, string access_token)
         {
             var isAccess = await _UserRepository.CheckAccess(userId, access_token);
-            if(isAccess == null)
+            if (isAccess == null)
             {
                 return ("0", "Session Expired!", null);
             }
@@ -57,7 +56,7 @@ namespace KrishiLink.Service.Farmer
         public async Task<(string status_code, string status_message)> AddFarmerSaleDetails(FarmerSaleDTO farmerSaleDTO)
         {
 
-            var isAccess = await _UserRepository.CheckAccess(farmerSaleDTO.UserId, farmerSaleDTO.Access_Token);
+            var isAccess = await _UserRepository.CheckAccess(farmerSaleDTO.UserId, farmerSaleDTO.AccessToken);
             if (isAccess == null)
             {
                 return ("0", "Session Expired!");
@@ -80,7 +79,7 @@ namespace KrishiLink.Service.Farmer
 
         public async Task<(string status_code, string status_message)> UpdateFarmerSaleDetails(FarmerSaleTokenDTO farmerSaleTokenDTO)
         {
-            var isAccess = await _UserRepository.CheckAccess(farmerSaleTokenDTO.UserId, farmerSaleTokenDTO.Access_Token);
+            var isAccess = await _UserRepository.CheckAccess(farmerSaleTokenDTO.UserId, farmerSaleTokenDTO.AccessToken);
             if (isAccess == null)
             {
                 return ("0", "Session Expired!");
@@ -137,7 +136,7 @@ namespace KrishiLink.Service.Farmer
             {
                 return ("0", $"Failed to Delete data: {ex.Message}");
             }
-            
+
         }
 
     }

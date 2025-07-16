@@ -10,19 +10,18 @@ namespace KrishiLink.Models.Transport
         [Key]
         public int TransferId { get; set; }
 
-        public int VehicalId { get; set; } 
+        public int VehicalId { get; set; }
 
         [ForeignKey("VehicalId")]
         public VehicleTransportData VehicleTransportData { get; set; }
+        public decimal Count { get; set; }
 
-        public string Count { get; set; }
+        public decimal Count_Weight { get; set; }
 
-        public string Count_Weight { get; set; }
-        
-        public string Total_Weight { get; set; }
+        public decimal Total_Weight { get; set; }
 
-        public string Price { get; set; }
+        public decimal Price { get; set; }
 
-        public string Total_Amount { get; set; }
+        public decimal Total_Amount { get; set; }
     }
 }

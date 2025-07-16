@@ -1,14 +1,13 @@
-﻿using Microsoft.EntityFrameworkCore;
-
-namespace KrishiLink.DTO.Transport
+﻿namespace KrishiLink.DTO.Transport
 {
-    public class GetVehTransportDTO
+    public class VehicalTransportDataTokenDTO
     {
         public int VehicalId { get; set; }
+        public int UserId { get; set; }
+        public string AccessToken { get; set; }
         public string Vehical_Number { get; set; }
 
         public decimal Total_Weight { get; set; }
-        public decimal Total_Count { get; set; }
 
         public decimal Total_Amount { get; set; }
         public decimal Laber { get; set; }
@@ -17,9 +16,7 @@ namespace KrishiLink.DTO.Transport
         public decimal Commission { get; set; }
 
         public decimal Final_Amount { get; set; }
-
-        public DateTime Created_At { get; set; }
-        public DateTime Updated_At { get; set; }
+        public decimal Total_Count { get; set; }
         public List<TransferDetailDto> Transfer_Detail { get; set; }
     }
 }

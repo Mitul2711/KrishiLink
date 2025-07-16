@@ -1,5 +1,4 @@
-﻿using KrishiLink.DTO;
-using KrishiLink.Models.Auth;
+﻿using KrishiLink.Models.Auth;
 
 namespace KrishiLink.Repository.Auth.Interface
 {

@@ -1,17 +1,15 @@
 ﻿using KrishiLink.DTO.Broker;
-using KrishiLink.DTO.Farmer;
 using KrishiLink.Models.Broker;
-using KrishiLink.Models.Farmer;
 
 namespace KrishiLink.Service.Broker.Interface
 {
     public interface IBrokerDataService
     {
-        Task<(bool IsSuccess, string Message, IEnumerable<BrokerData> Data)> GetAllBrokerData();
-        Task<(bool IsSuccess, string Message, BrokerData Data)> GetBrokerDataById(int id);
+        Task<(string status_code, string status_message, IEnumerable<BrokerData> Data)> GetAllBrokerData(int userId, string access_token);
+        Task<(string status_code, string status_message, BrokerData Data)> GetBrokerDataById(int id, int userId, string access_token);
 
-        Task<(bool IsSuccess, string Message)> AddBrokerData(BrokerDataDTO brokerDataDTO);
-        Task<(bool IsSuccess, string Message)> UpdateBrokerData(BrokerData brokerData);
-        Task<(bool IsSuccess, string Message)> DeleteBrokerData(int id);
+        Task<(string status_code, string status_message)> AddBrokerData(BrokerDataDTO brokerDataDTO);
+        Task<(string status_code, string status_message)> UpdateBrokerData(BrokerSaleTokenDTO brokerSaleTokenDTO);
+        Task<(string status_code, string status_message)> DeleteBrokerData(int id, int userId, string access_token);
     }
 }

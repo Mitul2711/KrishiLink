@@ -1,6 +1,6 @@
 ﻿using KrishiLink.DTO.Transport;
-using KrishiLink.Models.Farmer;
 using KrishiLink.Models.Transport;
+using KrishiLink.Repository.Auth.Interface;
 using KrishiLink.Repository.Transport.Interface;
 using KrishiLink.Service.Transport.Interface;
 
@@ -10,48 +10,71 @@ namespace KrishiLink.Service.Transport
     {
         private readonly IVehTransportRepository _vehTransportRepository;
 
-        public VehTransportService(IVehTransportRepository vehTransportRepository)
+        public IUserRepository _UserRepository { get; }
+
+        public VehTransportService(IVehTransportRepository vehTransportRepository, IUserRepository userRepository)
         {
             _vehTransportRepository = vehTransportRepository;
+            _UserRepository = userRepository;
         }
 
-        public async Task<(bool isSuccess, string Message, IEnumerable<GetVehTransportDTO> Data)> GetAllVehTransportDetail()
+        public async Task<(string status_code, string status_message, IEnumerable<GetVehTransportDTO> Data)> GetAllVehTransportDetail(int userId, string access_token)
         {
-            var vehicalData = await _vehTransportRepository.GetAllVehTransportDetail();
-            if(vehicalData == null || !vehicalData.Any())
+            var isAccess = await _UserRepository.CheckAccess(userId, access_token);
+            if (isAccess == null)
             {
-                return (false, "Data Not Found", vehicalData);
+                return ("0", "Session Expired!", null);
+            }
+
+            var vehicalData = await _vehTransportRepository.GetAllVehTransportDetail(userId);
+            if (vehicalData == null || !vehicalData.Any())
+            {
+                return ("0", "Data Not Found", vehicalData);
             }
             else
             {
-                return (true, "Transport data retrieved successfully", vehicalData);
+                return ("1", "Transport data retrieved successfully", vehicalData);
             }
         }
 
-        public async Task<(bool isSuccess, string Message, IEnumerable<GetVehTransportDTO> Data)> GetVehTransportDetailById(int id)
+        public async Task<(string status_code, string status_message, IEnumerable<GetVehTransportDTO> Data)> GetVehTransportDetailById(int id, int userId, string access_token)
         {
-            var vehicalData = await _vehTransportRepository.GetVehTransportDetailById(id);
+            var isAccess = await _UserRepository.CheckAccess(userId, access_token);
+            if (isAccess == null)
+            {
+                return ("0", "Session Expired!", null);
+            }
+
+            var vehicalData = await _vehTransportRepository.GetVehTransportDetailById(id, userId);
             if (vehicalData == null || !vehicalData.Any())
             {
-                return (false, $"No Transport data found with ID = {id}.", null);
+                return ("0", $"No Transport data found with ID = {id}.", null);
             }
 
-            return (true, "Transport data retrieved successfully.", vehicalData);
+            return ("1", "Transport data retrieved successfully.", vehicalData);
         }
 
 
-        public async Task<(bool isSuccess, string Message)> AddVehTransportDetail(VehicleTransportDataDTO vehicleTransportDataDTO)
+        public async Task<(string status_code, string status_message)> AddVehTransportDetail(VehicleTransportDataDTO vehicleTransportDataDTO)
         {
-            if(vehicleTransportDataDTO == null)
+            var isAccess = await _UserRepository.CheckAccess(vehicleTransportDataDTO.UserId, vehicleTransportDataDTO.AccessToken);
+            if (isAccess == null)
             {
-                return (false, "Fiels is Empty");
+                return ("0", "Session Expired!");
+            }
+
+            if (vehicleTransportDataDTO == null)
+            {
+                return ("0", "Fiels is Empty");
             }
 
             var transportData = new VehicleTransportData
             {
-                Vehical_Number = vehicleTransportDataDTO.Number_Plate,
+                UserId = vehicleTransportDataDTO.UserId,
+                Vehical_Number = vehicleTransportDataDTO.Vehical_Number,
                 Total_Weight = vehicleTransportDataDTO.Total_Weight,
                 Total_Amount = vehicleTransportDataDTO.Total_Amount,
+                Total_Count = vehicleTransportDataDTO.Total_Count,
                 Laber = vehicleTransportDataDTO.Laber,
                 Brokerage = vehicleTransportDataDTO.Brokerage,
                 Market_Shake = vehicleTransportDataDTO.Market_Shake,
@@ -59,67 +82,72 @@ namespace KrishiLink.Service.Transport
                 Final_Amount = vehicleTransportDataDTO.Final_Amount,
                 Transfer_Detail = vehicleTransportDataDTO.Transfer_Detail
                                     .Select(d => new TransferDetail
-                                        {
-                                            VehicalId = d.VehicalId,
-                                            Count = d.Count,
-                                            Count_Weight = d.Count_Weight,
-                                            Total_Weight = d.Weight,
-                                            Price = d.Price,
-                                            Total_Amount = d.Amount
-                                        })
+                                    {
+                                        Count = d.Count,
+                                        Count_Weight = d.Count_Weight,
+                                        Total_Weight = d.Total_Weight,
+                                        Price = d.Price,
+                                        Total_Amount = d.Total_Amount
+                                    })
                                     .ToList()
 
             };
 
             await _vehTransportRepository.AddVehTransportDetail(transportData);
-            return (true, "Data Added Successfully!");
+            return ("1", "Data Added Successfully!");
         }
 
-        public async Task<(bool isSuccess, string Message)> UpdateVehTransportDetail(GetVehTransportDTO getVehTransportDTO)
+        public async Task<(string status_code, string status_message)> UpdateVehTransportDetail(VehicalTransportDataTokenDTO vehicalTransportDataTokenDTO)
         {
-            if (getVehTransportDTO == null)
+            if (vehicalTransportDataTokenDTO == null)
             {
-                return (false, "Data is required.");
+                return ("0", "Data is required.");
             }
 
-            var data = await _vehTransportRepository.CheckVehTransportData(getVehTransportDTO.VehicalId);
+            var data = await _vehTransportRepository.CheckVehTransportData(vehicalTransportDataTokenDTO.VehicalId);
             if (data == null)
             {
-                return (false, "Data Not Found");
+                return ("0", "Data Not Found");
             }
 
             try
             {
-                await _vehTransportRepository.UpdateVehTransportDetail(getVehTransportDTO);
-                return (true, "Data updated successfully!");
+                await _vehTransportRepository.UpdateVehTransportDetail(vehicalTransportDataTokenDTO);
+                return ("1", "Data updated successfully!");
             }
             catch (Exception ex)
             {
-                return (false, $"Failed to update data: {ex.Message}");
+                return ("0", $"Failed to update data: {ex.Message}");
             }
         }
 
-        public async Task<(bool IsSuccess, string Message)> DeleteVehTransportDetail(int id)
+        public async Task<(string status_code, string status_message)> DeleteVehTransportDetail(int id, int userId, string access_token)
         {
+            var isAccess = await _UserRepository.CheckAccess(userId, access_token);
+            if (isAccess == null)
+            {
+                return ("0", "Session Expired!");
+            }
+
             if (id == 0)
             {
-                return (false, "Id Is Not Exists!");
+                return ("0", "Id Is Not Exists!");
             }
 
             var data = await _vehTransportRepository.CheckVehTransportData(id);
             if (data == null)
             {
-                return (false, "Data Not Found");
+                return ("0", "Data Not Found");
             }
 
             try
             {
-                await _vehTransportRepository.DeleteVehTransportDetail(id);
-                return (true, "Data Deleted");
+                await _vehTransportRepository.DeleteVehTransportDetail(id, userId);
+                return ("1", "Data Deleted");
             }
             catch (Exception ex)
             {
-                return (false, $"Failed to Delete data: {ex.Message}");
+                return ("0", $"Failed to Delete data: {ex.Message}");
             }
 
         }

@@ -1,11 +1,10 @@
-﻿using KrishiLink.DTO.Transport;
+﻿using KrishiLink.DTO.Access_Token;
+using KrishiLink.DTO.Transport;
 using KrishiLink.Service.Transport.Interface;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace KrishiLink.Controllers.Transport
 {
-    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class VehTransportController : ControllerBase
@@ -17,73 +16,73 @@ namespace KrishiLink.Controllers.Transport
             _vehTransportService = vehTransportService;
         }
 
-        [HttpGet("GetAllVehTransportDetail")]
-        public async Task<ActionResult> GetAllVehTransportDetail()
+        [HttpPost("GetAllVehTransportDetail")]
+        public async Task<ActionResult> GetAllVehTransportDetail(Access_TokenDTO access_TokenDTO)
         {
-            var (IsSuccess, Message, data) = await _vehTransportService.GetAllVehTransportDetail();
-            if (!IsSuccess)
+            var (status_code, status_message, data) = await _vehTransportService.GetAllVehTransportDetail(access_TokenDTO.UserId, access_TokenDTO.AccessToken);
+            if (status_code == "0")
             {
-                return NotFound(new { IsSuccess, Message });
+                return Ok(new { status_code, status_message });
             }
             else
             {
-                return Ok(new { IsSuccess, Message, data });
+                return Ok(new { status_code, status_message, data });
             }
         }
 
-        [HttpGet("GetVehTransportDetailById")]
-        public async Task<ActionResult> GetVehTransportDetailById(int id)
+        [HttpPost("GetVehTransportDetailById")]
+        public async Task<ActionResult> GetVehTransportDetailById(int id, int userId, string access_token)
         {
-            var (IsSuccess, Message, data) = await _vehTransportService.GetVehTransportDetailById(id);
-            if (!IsSuccess)
+            var (status_code, status_message, data) = await _vehTransportService.GetVehTransportDetailById(id, userId, access_token);
+            if (status_code == "0")
             {
-                return NotFound(new { IsSuccess, Message });
+                return Ok(new { status_code, status_message });
             }
             else
             {
-                return Ok(new { IsSuccess, Message, data });
+                return Ok(new { status_code, status_message, data });
             }
         }
 
         [HttpPost("AddVehTransportDetail")]
         public async Task<ActionResult> AddVehTransportDetail(VehicleTransportDataDTO vehicleTransportDataDTO)
         {
-            var (IsSuccess, Message) = await _vehTransportService.AddVehTransportDetail(vehicleTransportDataDTO);
-            if (!IsSuccess)
+            var (status_code, status_message) = await _vehTransportService.AddVehTransportDetail(vehicleTransportDataDTO);
+            if (status_code == "0")
             {
-                return NotFound(new { IsSuccess, Message });
+                return Ok(new { status_code, status_message });
             }
             else
             {
-                return Ok(new { IsSuccess, Message });
+                return Ok(new { status_code, status_message });
             }
         }
 
-        [HttpPut("UpdateVehTransportDetail")]
-        public async Task<ActionResult> UpdateVehTransportDetail(GetVehTransportDTO getVehTransportDTO)
+        [HttpPost("UpdateVehTransportDetail")]
+        public async Task<ActionResult> UpdateVehTransportDetail(VehicalTransportDataTokenDTO vehicalTransportDataTokenDTO)
         {
-            var (IsSuccess, Message) = await _vehTransportService.UpdateVehTransportDetail(getVehTransportDTO);
-            if (!IsSuccess)
+            var (status_code, status_message) = await _vehTransportService.UpdateVehTransportDetail(vehicalTransportDataTokenDTO);
+            if (status_code == "0")
             {
-                return NotFound(new { IsSuccess, Message });
+                return Ok(new { status_code, status_message });
             }
             else
             {
-                return Ok(new { IsSuccess, Message });
+                return Ok(new { status_code, status_message });
             }
         }
 
-        [HttpDelete("DeleteVehTransportDetail")]
-        public async Task<ActionResult> DeleteVehTransportDetail(int id)
+        [HttpPost("DeleteVehTransportDetail")]
+        public async Task<ActionResult> DeleteVehTransportDetail(int id, int userId, string access_token)
         {
-            var (IsSuccess, Message) = await _vehTransportService.DeleteVehTransportDetail(id);
-            if (!IsSuccess)
+            var (status_code, status_message) = await _vehTransportService.DeleteVehTransportDetail(id, userId, access_token);
+            if (status_code == "0")
             {
-                return NotFound(new { IsSuccess, Message });
+                return Ok(new { status_code, status_message });
             }
             else
             {
-                return Ok(new { IsSuccess, Message });
+                return Ok(new { status_code, status_message });
             }
         }
 

@@ -1,7 +1,6 @@
 ﻿using KrishiLink.DTO.Broker;
-using KrishiLink.DTO.Farmer;
 using KrishiLink.Models.Broker;
-using KrishiLink.Models.Farmer;
+using KrishiLink.Repository.Auth.Interface;
 using KrishiLink.Repository.Broker.Interface;
 using KrishiLink.Service.Broker.Interface;
 
@@ -11,108 +10,120 @@ namespace KrishiLink.Service.Broker
     {
         private readonly IBrokerDataRepository _brokerDataRepository;
 
-        public BrokerDataService(IBrokerDataRepository brokerDataRepository)
+        public IUserRepository _UserRepository { get; }
+
+        public BrokerDataService(IBrokerDataRepository brokerDataRepository, IUserRepository userRepository)
         {
             _brokerDataRepository = brokerDataRepository;
+            _UserRepository = userRepository;
         }
 
 
-        public async Task<(bool IsSuccess, string Message, IEnumerable<BrokerData> Data)> GetAllBrokerData()
+        public async Task<(string status_code, string status_message, IEnumerable<BrokerData> Data)> GetAllBrokerData(int userId, string access_token)
         {
-            var result = await _brokerDataRepository.GetAllBrokerData();
+            var result = await _brokerDataRepository.GetAllBrokerData(userId, access_token);
             if (result == null || !result.Any())
             {
-                return (false, "No Broker data found.", null);
+                return ("0", "No Broker data found.", null);
             }
 
-            return (true, "Broker data retrieved successfully.", result);
+            return ("1", "Broker data retrieved successfully.", result);
         }
 
-        public async Task<(bool IsSuccess, string Message, BrokerData Data)> GetBrokerDataById(int id)
+        public async Task<(string status_code, string status_message, BrokerData Data)> GetBrokerDataById(int id, int userId, string access_token)
         {
-            var result = await _brokerDataRepository.GetBrokerDataById(id);
+            var result = await _brokerDataRepository.GetBrokerDataById(id, userId, access_token);
             if (result == null)
             {
-                return (false, $"No Broker Data found with ID = {id}.", null);
+                return ("0", $"No Broker Data found with ID = {id}.", null);
             }
 
-            return (true, "Broker data retrieved successfully.", result);
+            return ("1", "Broker data retrieved successfully.", result);
         }
 
-        public async Task<(bool IsSuccess, string Message)> AddBrokerData(BrokerDataDTO brokerDataDTO)
+        public async Task<(string status_code, string status_message)> AddBrokerData(BrokerDataDTO brokerDataDTO)
         {
+            var isAccess = await _UserRepository.CheckAccess(brokerDataDTO.UserId, brokerDataDTO.AccessToken);
+            if (isAccess == null)
+            {
+                return ("0", "Session Expired!");
+            }
+
             if (brokerDataDTO == null)
             {
-                return (false, "Data is required.");
+                return ("0", "Data is required.");
             }
 
             try
             {
-                var brokerDetails = new BrokerData
-                {
-                    Broker_name = brokerDataDTO.Broker_name,
-                    Mobile = brokerDataDTO.Mobile,
-                    Village = brokerDataDTO.Village,
-                    Crop_Name = brokerDataDTO.Crop_Name,
-                    Crop_Type = brokerDataDTO.Crop_Type,
-                    Weight = brokerDataDTO.Weight,
-                    Price = brokerDataDTO.Price
-                };
 
-                await _brokerDataRepository.AddBrokerData(brokerDetails);
-                return (true, "Broker Data added successfully!");
+                await _brokerDataRepository.AddBrokerData(brokerDataDTO);
+                return ("1", "Broker Data added successfully!");
             }
             catch (Exception ex)
             {
-                return (false, $"Failed to add data: {ex.Message}");
+                return ("0", $"Failed to add data: {ex.Message}");
             }
         }
 
-        public async Task<(bool IsSuccess, string Message)> UpdateBrokerData(BrokerData brokerData)
+        public async Task<(string status_code, string status_message)> UpdateBrokerData(BrokerSaleTokenDTO brokerSaleTokenDTO)
         {
-            if (brokerData == null)
+            var isAccess = await _UserRepository.CheckAccess(brokerSaleTokenDTO.UserId, brokerSaleTokenDTO.AccessToken);
+            if (isAccess == null)
             {
-                return (false, "Data is required.");
+                return ("0", "Session Expired!");
+
+            }
+            if (brokerSaleTokenDTO == null)
+            {
+                return ("0", "Data is required.");
             }
 
-            var data = await _brokerDataRepository.GetBrokerDataById(brokerData.BrokerId);
+            var data = await _brokerDataRepository.GetBrokerDataById(brokerSaleTokenDTO.BrokerId, brokerSaleTokenDTO.UserId, brokerSaleTokenDTO.AccessToken);
             if (data == null)
             {
-                return (false, "Data Not Found");
+                return ("0", "Data Not Found");
             }
 
             try
             {
-                await _brokerDataRepository.UpdateBrokerData(brokerData);
-                return (true, "Data updated successfully!");
+                await _brokerDataRepository.UpdateBrokerData(brokerSaleTokenDTO);
+                return ("1", "Data updated successfully!");
             }
             catch (Exception ex)
             {
-                return (false, $"Failed to update data: {ex.Message}");
+                return ("0", $"Failed to update data: {ex.Message}");
             }
         }
 
-        public async Task<(bool IsSuccess, string Message)> DeleteBrokerData(int id)
+        public async Task<(string status_code, string status_message)> DeleteBrokerData(int id, int userId, string access_token)
         {
+            var isAccess = await _UserRepository.CheckAccess(userId, access_token);
+            if (isAccess == null)
+            {
+                return ("0", "Session Expired!");
+
+            }
+
             if (id == 0)
             {
-                return (false, "Id Is Not Exists!");
+                return ("0", "Id Is Not Exists!");
             }
 
-            var data = await _brokerDataRepository.GetBrokerDataById(id);
+            var data = await _brokerDataRepository.GetBrokerDataById(id, userId, access_token);
             if (data == null)
             {
-                return (false, "Data Not Found");
+                return ("0", "Data Not Found");
             }
 
             try
             {
-                await _brokerDataRepository.DeleteBrokerData(id);
-                return (true, "Data Deleted");
+                await _brokerDataRepository.DeleteBrokerData(id, userId);
+                return ("1", "Data Deleted");
             }
             catch (Exception ex)
             {
-                return (false, $"Failed to Delete data: {ex.Message}");
+                return ("0", $"Failed to Delete data: {ex.Message}");
             }
 
         }
