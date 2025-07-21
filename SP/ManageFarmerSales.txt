@@ -1,0 +1,82 @@
+USE [KrishiLink]
+GO
+/****** Object:  StoredProcedure [dbo].[ManageFarmerSales]    Script Date: 15-07-2025 16:24:25 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+ALTER PROCEDURE [dbo].[ManageFarmerSales]
+    @Action        NVARCHAR(20),
+    @FarmerId      INT              = NULL,
+    @Farmer_name   NVARCHAR(100)    = NULL,
+    @Mobile        NVARCHAR(20)     = NULL,
+    @Village       NVARCHAR(100)    = NULL,
+    @Crop_Name     NVARCHAR(100)    = NULL,
+    @Crop_Type     NVARCHAR(100)    = NULL,
+    @Weight        DECIMAL(18,2)    = NULL,
+    @Price         DECIMAL(18,2)    = NULL,
+    @Total_Price   DECIMAL(18,2)    = NULL,
+    @UserId        INT              = NULL         
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    IF @UserId IS NULL
+    BEGIN
+        RAISERROR(N'UserId cannot be NULL.', 16, 1);
+        RETURN;
+    END
+
+    IF @Action = 'POST'
+    BEGIN
+        INSERT INTO dbo.FarmerSales
+              (Farmer_name, Mobile, Village,
+               Crop_Name,  Crop_Type,
+               Weight,      Price,
+               Created_At, Updated_At, UserId, Total_Price)
+        VALUES (@Farmer_name, @Mobile, @Village,
+                @Crop_Name,  @Crop_Type,
+                @Weight,     @Price,
+                GETDATE(), GETDATE(),  @UserId, @Total_Price);
+    END
+
+    ELSE IF @Action = 'DELETE'
+    BEGIN
+        DELETE FROM dbo.FarmerSales
+        WHERE FarmerId = @FarmerId
+              AND UserId   = @UserId;
+    END
+
+    ELSE IF @Action = 'PUT'
+    BEGIN
+        UPDATE dbo.FarmerSales
+           SET Farmer_name = @Farmer_name,
+               Mobile      = @Mobile,
+               Village     = @Village,
+               Crop_Name   = @Crop_Name,
+               Crop_Type   = @Crop_Type,
+               Weight      = @Weight,
+               Price       = @Price,
+			   Total_Price = @Total_Price,
+               Updated_At  = GETDATE()
+        WHERE FarmerId = @FarmerId;
+    END
+
+    ELSE IF @Action = 'GET'
+    BEGIN
+        IF @FarmerId IS NULL
+        BEGIN
+            SELECT *
+            FROM dbo.FarmerSales
+            WHERE UserId = @UserId;
+        END
+        ELSE
+        BEGIN
+            SELECT *
+            FROM dbo.FarmerSales
+            WHERE FarmerId = @FarmerId
+              AND UserId   = @UserId;
+        END
+    END
+END

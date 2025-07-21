@@ -127,17 +127,25 @@ builder.Services.AddSwaggerGen(c =>
 //        });
 //});
 
-
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowUi", policy =>
     {
-        policy.WithOrigins("http://localhost:4200")
-              .AllowAnyHeader()
-              .AllowAnyMethod()
-              .AllowCredentials(); // Optional: use only if your frontend sends cookies or credentials
+        policy
+            .SetIsOriginAllowed(origin =>
+            {
+                if (string.IsNullOrEmpty(origin)) return false;
+
+                // Allow localhost and any ngrok-free.app domain
+                return origin == "http://localhost:4200" || origin.Contains(".ngrok-free.app");
+            })
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials(); // only if you're using cookies or Authorization header
     });
 });
+
+
 
 
 
@@ -155,6 +163,8 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseCors("AllowUi");
+app.UseDeveloperExceptionPage(); // Add this early in the pipeline (after builder.Build())
+
 
 // Enable authentication and authorization
 app.UseAuthentication();

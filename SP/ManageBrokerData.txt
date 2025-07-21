@@ -1,0 +1,69 @@
+USE [KrishiLink]
+GO
+/****** Object:  StoredProcedure [dbo].[ManageBrokerData]    Script Date: 15-07-2025 16:24:29 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+ALTER   PROCEDURE [dbo].[ManageBrokerData]
+    @Action NVARCHAR(20),
+    @BrokerId INT = NULL,
+    @Broker_name NVARCHAR(100) = NULL,
+    @Mobile NVARCHAR(20) = NULL,
+    @Village NVARCHAR(100) = NULL,
+    @Crop_Name NVARCHAR(100) = NULL,
+    @Crop_Type NVARCHAR(100) = NULL,
+    @Weight DECIMAL(18,2) = NULL,
+    @Price DECIMAL(18,2) = NULL,
+    @Count DECIMAL(18,2) = NULL,
+    @Total_Brokerage DECIMAL(18,2) = NULL,
+    @Total_Amount DECIMAL(18,2) = NULL,
+    @UserId INT = NULL         
+
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    IF @Action = 'POST'
+    BEGIN
+        INSERT INTO BrokerData (Broker_name, Mobile, Village, Crop_Name, Crop_Type, Weight, Price, Count, Total_Brokerage, Total_Amount,
+								Created_At, Updated_At, UserId)
+        VALUES (@Broker_name, @Mobile, @Village, @Crop_Name, @Crop_Type, @Weight, @Price, @Count, @Total_Brokerage, @Total_Amount,
+					GETDATE(), GETDATE(), @UserId);
+    END
+
+    ELSE IF @Action = 'DELETE'
+    BEGIN
+        DELETE FROM BrokerData WHERE BrokerId = @BrokerId AND UserId = @UserId;
+    END
+
+    ELSE IF @Action = 'PUT'
+    BEGIN
+        UPDATE BrokerData
+        SET Broker_name = @Broker_name,
+            Mobile = @Mobile,
+            Village = @Village,
+            Crop_Name = @Crop_Name,
+            Crop_Type = @Crop_Type,
+            Weight = @Weight,
+            Price = @Price,
+			Count = @Count,
+			Total_Brokerage = @Total_Brokerage,
+			Total_Amount = @Total_Amount,
+			Updated_At = GETDATE()
+        WHERE BrokerId = @BrokerId;
+    END
+
+    ELSE IF @Action = 'GET'
+    BEGIN
+        IF @BrokerId IS NULL
+        BEGIN
+            SELECT * FROM BrokerData WHERE USerId = @UserId;
+        END
+        ELSE
+        BEGIN
+            SELECT * FROM BrokerData WHERE BrokerId = @BrokerId AND UserId = @UserId;
+        END
+    END
+END

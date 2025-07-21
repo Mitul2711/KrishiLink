@@ -1,0 +1,175 @@
+USE [KrishiLink];
+GO
+
+DROP PROCEDURE IF EXISTS [dbo].[SP_InsertVehicleWithTransfers];
+GO
+
+DROP TYPE IF EXISTS [dbo].[TransferDetailType];
+GO
+
+
+
+-----------------------------------------------------------------------------------------------------------------------
+
+
+
+
+
+CREATE TYPE [dbo].[TransferDetailType] AS TABLE
+(
+    [Count]           DECIMAL(18,2),
+    [Count_Weight]    DECIMAL(18,2),
+    [Total_Weight]    DECIMAL(18,2),
+    [Price]           DECIMAL(18,2),
+    [Total_Amount]    DECIMAL(18,2)
+);
+
+
+
+
+
+
+------------------------------------------------------------------------------------------------------------------------
+
+
+
+
+USE [KrishiLink]
+GO
+/****** Object:  StoredProcedure [dbo].[SP_InsertVehicleWithTransfers]    Script Date: 14-07-2025 17:11:53 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+ALTER     PROCEDURE [dbo].[SP_InsertVehicleWithTransfers]
+    @Action NVARCHAR(10) = NULL,
+    @VehicalId INT = NULL,
+    @Vehical_Number NVARCHAR(50) = NULL,
+    @Total_Weight DECIMAL(18,2) = NULL,
+    @Total_Amount DECIMAL(18,2) = NULL,
+    @Laber DECIMAL(18,2) = NULL,
+    @Brokerage DECIMAL(18,2) = NULL,
+    @Market_Shake DECIMAL(18,2) = NULL,
+    @Commission DECIMAL(18,2) = NULL,
+    @Final_Amount DECIMAL(18,2) = NULL,
+    @Total_Count DECIMAL(18,2) = NULL,
+    @UserId INT = NULL,
+    @TransferDetails TransferDetailType READONLY
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    IF @Action = 'POST'
+    BEGIN
+        INSERT INTO vehicleTransportData (Vehical_Number, Total_Weight, Total_Amount, Laber, Brokerage,
+                                          Market_Shake, Commission, Final_Amount, Total_Count, Created_At, Updated_At, UserId)
+        VALUES (@Vehical_Number, @Total_Weight, @Total_Amount, @Laber, @Brokerage, @Market_Shake, @Commission, @Final_Amount,
+				@Total_Count, GETDATE(), GETDATE(), @UserId);
+
+        DECLARE @NewVehicalId INT = SCOPE_IDENTITY();
+
+        INSERT INTO TransferDetail (VehicalId, Count, Count_Weight, Total_Weight, Price, Total_Amount)
+        SELECT @NewVehicalId, Count, Count_Weight, Total_Weight, Price, Total_Amount
+        FROM @TransferDetails;
+    END
+
+    IF @Action = 'PUT'
+    BEGIN
+        UPDATE vehicleTransportData
+        SET Vehical_Number = @Vehical_Number,
+            Total_Weight = @Total_Weight,
+            Total_Amount = @Total_Amount,
+            Laber = @Laber,
+            Brokerage = @Brokerage,
+            Market_Shake = @Market_Shake,
+            Commission = @Commission,
+            Final_Amount = @Final_Amount,
+			Total_Count = @Total_Count,
+			Updated_At = GETDATE()
+        WHERE VehicalId = @VehicalId;
+
+        DELETE FROM TransferDetail WHERE VehicalId = @VehicalId;
+
+        INSERT INTO TransferDetail (VehicalId, Count, Count_Weight, Total_Weight, Price, Total_Amount)
+        SELECT @VehicalId, Count, Count_Weight, Total_Weight, Price, Total_Amount
+        FROM @TransferDetails;
+    END
+
+	IF @Action = 'CHECK'
+	BEGIN
+		SELECT * FROM vehicleTransportData WHERE @VehicalId = VehicalId;
+	END
+
+    IF @Action = 'GET'
+    BEGIN
+        IF @VehicalId IS NULL
+        BEGIN
+            SELECT (
+                SELECT 
+                    v.VehicalId,
+                    v.Vehical_Number,
+                    v.Total_Weight,
+                    v.Total_Amount,
+                    v.Laber,
+                    v.Brokerage,
+                    v.Market_Shake,
+                    v.Commission,
+                    v.Final_Amount,
+                    v.Total_Count,
+					v.Created_At,
+					v.Updated_At,
+                    (
+                        SELECT 
+                            t.Count,
+                            t.Count_Weight,
+                            t.Total_Weight,
+                            t.Price,
+                            t.Total_Amount
+                        FROM TransferDetail t
+                        WHERE t.VehicalId = v.VehicalId
+                        FOR JSON PATH
+                    ) AS Transfer_Detail
+                FROM vehicleTransportData v
+				WHERE v.UserId = @UserId
+                FOR JSON PATH
+            ) AS JsonResult
+        END
+        ELSE
+        BEGIN
+            SELECT (
+                SELECT 
+                    v.VehicalId,
+                    v.Vehical_Number,
+                    v.Total_Weight,
+                    v.Total_Amount,
+                    v.Laber,
+                    v.Brokerage,
+                    v.Market_Shake,
+                    v.Commission,
+                    v.Final_Amount,
+                    v.Total_Count,
+                    (
+                        SELECT 
+                            t.Count,
+                            t.Count_Weight,
+                            t.Total_Weight,
+                            t.Price,
+                            t.Total_Amount
+                        FROM TransferDetail t
+                        WHERE t.VehicalId = v.VehicalId
+                        FOR JSON PATH
+                    ) AS Transfer_Detail
+                FROM vehicleTransportData v
+                WHERE v.VehicalId = @VehicalId AND v.UserId = @UserId
+                FOR JSON PATH
+            ) AS JsonResult
+        END
+    END
+
+	IF @Action = 'DELETE'
+	BEGIN
+		DELETE FROM TransferDetail WHERE VehicalId = @VehicalId;
+		DELETE FROM vehicleTransportData WHERE VehicalId = @VehicalId AND UserId = @UserId;
+	END
+
+END
