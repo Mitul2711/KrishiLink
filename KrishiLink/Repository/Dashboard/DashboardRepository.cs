@@ -1,12 +1,12 @@
 ﻿using Dapper;
 using KrishiLink.DBContext;
 using KrishiLink.DTO.Dashboard;
+using KrishiLink.DTO.Transport;
 using KrishiLink.Models.Broker;
 using KrishiLink.Models.DashBoard;
 using KrishiLink.Models.Farmer;
 using KrishiLink.Models.Transport;
 using KrishiLink.Repository.Dashboard.Interface;
-using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using System.Data;
 
@@ -16,10 +16,9 @@ namespace KrishiLink.Repository.Dashboard
     {
         private readonly AppDbContext _appDbContext;
         public DashboardRepository(AppDbContext appDbContext)
-        {   
+        {
             _appDbContext = appDbContext;
         }
-
         public async Task<DashBoard> GetDashBoardInfo(DashBoardDTO dashboardDTO)
         {
             using (var connection = _appDbContext.Database.GetDbConnection())
@@ -33,25 +32,47 @@ namespace KrishiLink.Repository.Dashboard
                     new { UserId = dashboardDTO.UserId, Category = dashboardDTO.Category, Period = dashboardDTO.Period },
                     commandType: CommandType.StoredProcedure))
                 {
-                    switch (dashboardDTO.Category?.ToUpper())
+                    string category = dashboardDTO.Category?.ToUpper();
+
+                    if (category == "FARMER")
                     {
-                        case "FARMER":
-                            result.Farmer = multi.Read<FarmerSale>().ToList();
-                            break;
+                        result.Farmer = multi.Read<FarmerSale>().ToList();
+                    }
+                    else if (category == "TRANSPORT")
+                    {
+                        var transportList = multi.Read<DashVehicalDTO>().ToList();
+                        var transferDetailList = multi.Read<DashTransportDTO>().ToList();
 
-                        case "TRANSPORT":
-                            result.Transport = multi.Read<VehicleTransportData>().ToList();
-                            break;
+                        foreach (var transport in transportList)
+                        {
+                            transport.Transfer_Detail = transferDetailList
+                                .Where(td => td.VehicalId == transport.VehicalId)
+                                .ToList();
+                        }
 
-                        case "BROKER":
-                            result.Broker = multi.Read<BrokerData>().ToList();
-                            break;
+                        result.Transport = transportList;
+                    }
+                    else if (category == "BROKER")
+                    {
+                        result.Broker = multi.Read<BrokerData>().ToList();
+                    }
+                    else
+                    {
+                        result.Farmer = multi.Read<FarmerSale>().ToList();
 
-                        default:
-                            result.Farmer = multi.Read<FarmerSale>().ToList();
-                            result.Transport = multi.Read<VehicleTransportData>().ToList();
-                            result.Broker = multi.Read<BrokerData>().ToList();
-                            break;
+                        var transportList = multi.Read<DashVehicalDTO>().ToList();
+                        var transferDetailList = multi.Read<DashTransportDTO>().ToList();
+
+                        foreach (var transport in transportList)
+                        {
+                            transport.Transfer_Detail = transferDetailList
+                                .Where(td => td.VehicalId == transport.VehicalId)
+                                .ToList();
+                        }
+
+                        result.Transport = transportList;
+
+                        result.Broker = multi.Read<BrokerData>().ToList();
                     }
                 }
 
@@ -61,3 +82,10 @@ namespace KrishiLink.Repository.Dashboard
 
     }
 }
+
+
+
+
+
+
+
