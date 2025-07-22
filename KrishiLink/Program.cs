@@ -4,6 +4,8 @@ using KrishiLink.Repository.Auth;
 using KrishiLink.Repository.Auth.Interface;
 using KrishiLink.Repository.Broker;
 using KrishiLink.Repository.Broker.Interface;
+using KrishiLink.Repository.Dashboard;
+using KrishiLink.Repository.Dashboard.Interface;
 using KrishiLink.Repository.Farmer;
 using KrishiLink.Repository.Farmer.Interface;
 using KrishiLink.Repository.Transport;
@@ -12,6 +14,8 @@ using KrishiLink.Service.Auth;
 using KrishiLink.Service.Auth.Interface;
 using KrishiLink.Service.Broker;
 using KrishiLink.Service.Broker.Interface;
+using KrishiLink.Service.Dashboard;
+using KrishiLink.Service.Dashboard.Interface;
 using KrishiLink.Service.Farmer;
 using KrishiLink.Service.Transport;
 using KrishiLink.Service.Transport.Interface;
@@ -42,6 +46,9 @@ builder.Services.AddScoped<IBrokerDataService, BrokerDataService>();
 
 builder.Services.AddScoped<IVehTransportRepository, VehTransportRepository>();
 builder.Services.AddScoped<IVehTransportService, VehTransportService>();
+
+builder.Services.AddScoped<IDashboardRepository, DashboardRepository>();
+builder.Services.AddScoped<IDashboardService, DashboardService>();
 
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IUserService, UserService>();
