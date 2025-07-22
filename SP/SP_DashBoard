@@ -1,0 +1,55 @@
+USE [KrishiLink]
+GO
+/****** Object:  StoredProcedure [dbo].[SP_DashBoard]    Script Date: 22-07-2025 09:50:15 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+ALTER PROCEDURE [dbo].[SP_DashBoard]
+    @Category NVARCHAR(100) = NULL,
+    @Period NVARCHAR(100) = NULL,
+    @UserId INT = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    DECLARE @StartDate DATETIME = '1900-01-01', @EndDate DATETIME = GETDATE();
+
+    IF @Period = 'WEEK'
+        SET @StartDate = DATEADD(DAY, -7, @EndDate);
+    ELSE IF @Period = 'MONTH'
+        SET @StartDate = DATEADD(MONTH, -1, @EndDate);
+    ELSE IF @Period = 'YEAR'
+        SET @StartDate = DATEADD(YEAR, -1, @EndDate);
+
+    IF @Category IS NULL OR @Category = 'FARMER' OR @Category = ''
+    BEGIN
+        SELECT 
+            'FarmerSales' AS Source,
+            f.*
+        FROM FarmerSales f
+        WHERE f.Created_At BETWEEN @StartDate AND @EndDate AND f.UserId = @UserId;
+    END
+
+    IF @Category IS NULL OR @Category = 'TRANSPORT' OR @Category = ''
+	BEGIN
+    
+		SELECT v.* FROM vehicleTransportData v
+		WHERE v.Created_At BETWEEN @StartDate AND @EndDate AND v.UserId = @UserId;
+
+		SELECT td.* FROM TransferDetail td
+		JOIN vehicleTransportData v ON td.VehicalId = v.VehicalId
+		WHERE v.Created_At BETWEEN @StartDate AND @EndDate AND v.UserId = @UserId;
+
+	END
+
+
+    IF @Category IS NULL OR @Category = 'BROKER' OR @Category = ''
+    BEGIN
+        SELECT 
+            'BrokerData' AS Source,
+            b.*
+        FROM BrokerData b
+        WHERE b.Created_At BETWEEN @StartDate AND @EndDate AND b.UserId = @UserId;
+    END
+END
